@@ -152,7 +152,7 @@ export default function CrearFactura({ onFacturaCreada }: Props) {
         <h2 className="text-white font-bold text-lg">Nueva Factura</h2>
         {esExtranjero && (
           <span className="ml-auto text-xs font-semibold bg-blue-500 text-white px-2.5 py-1 rounded-full">
-            INVOICE · USD · VAT 0%
+            INVOICE · USD · VAT {ivaPorcentaje}%
           </span>
         )}
         {!esExtranjero && formatoSeleccionado && (
@@ -262,6 +262,28 @@ export default function CrearFactura({ onFacturaCreada }: Props) {
             className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
+
+        {/* VAT editable — solo para facturas extranjeras */}
+        {esExtranjero && (
+          <div className="flex items-center gap-4 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
+            <div className="flex-1">
+              <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">Tax Rate (VAT)</p>
+              <p className="text-xs text-blue-500 mt-0.5">Ajusta el porcentaje de impuesto aplicable a esta factura.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="0.5"
+                value={ivaPorcentaje}
+                onChange={e => setIvaPorcentaje(Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)))}
+                className="w-20 border border-blue-300 rounded-lg px-3 py-1.5 text-sm text-right font-bold text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              />
+              <span className="text-blue-700 font-bold text-sm">%</span>
+            </div>
+          </div>
+        )}
 
         {/* Tabla de Conceptos */}
         <div>
