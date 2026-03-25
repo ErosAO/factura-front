@@ -1,6 +1,6 @@
 import type { CreateUsuarioForm, UpdateUsuarioForm, Usuario } from '../types/usuario';
 
-const API_BASE = 'http://localhost:5139/users';
+const API_BASE = 'https://localhost:7266/users';
 
 function getToken(): string {
   try {
