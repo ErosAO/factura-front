@@ -1,6 +1,13 @@
 import { useState, useCallback } from 'react';
 import type { BloqueId, CreateFormatoForm, TipoFormato, UpdateFormatoForm } from '../../types/formato';
-import { BLOQUES_DISPONIBLES, REQUIRED_PLACEHOLDERS, TIPO_FORMATO_LABELS } from '../../types/formato';
+import {
+  ALL_PLACEHOLDERS,
+  BLOQUES_DISPONIBLES,
+  REQUIRED_PLACEHOLDERS,
+  TIPO_FORMATO_LABELS,
+} from '../../types/formato';
+import formatoNacional from '../../assets/formatostandardNacional.html?raw';
+import formatoExtranjero from '../../assets/formatostandardExtranjero.html?raw';
 
 type EditorMode = 'visual' | 'codigo';
 
@@ -20,9 +27,14 @@ const DEFAULT_FORM: CreateFormatoForm = {
   tipo: 1,
 };
 
+const STANDARD_TEMPLATES: Record<TipoFormato, string> = {
+  1: formatoNacional,
+  2: formatoExtranjero,
+};
+
 const WRAPPER_OPEN = `<!DOCTYPE html><html><head><meta charset="UTF-8">
 <style>body{font-family:Arial,sans-serif;padding:24px;max-width:800px;margin:auto;}
-table{width:100%;border-collapse:collapse;}th,td{padding:8px;}</style></head><body>`;
+table{border-collapse:collapse;}th,td{padding:8px;}</style></head><body>`;
 const WRAPPER_CLOSE = `</body></html>`;
 
 export default function FormatoEditor({
@@ -38,46 +50,41 @@ export default function FormatoEditor({
     initialData ?? DEFAULT_FORM
   );
   const [bloques, setBloques] = useState<BloqueId[]>([]);
-  const [colorPrimario, setColorPrimario] = useState('#1e40af');
-  const [colorSecundario, setColorSecundario] = useState('#64748b');
+  const [colorPrimario, setColorPrimario] = useState('#2c3e50');
+  const [colorSecundario, setColorSecundario] = useState('#c0392b');
   const [mostrarPreview, setMostrarPreview] = useState(false);
+  const [mostrarPlaceholders, setMostrarPlaceholders] = useState(false);
   const [dragOver, setDragOver] = useState<number | null>(null);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
-  // Genera el HTML final desde los bloques visuales, reemplazando colores
   const generarHtmlDesdeBlques = useCallback(
-    (bks: BloqueId[]) => {
-      const htmlBloques = bks
-        .map(id => {
-          const bloque = BLOQUES_DISPONIBLES.find(b => b.id === id);
-          return bloque ? bloque.html : '';
-        })
-        .join('\n');
-      return htmlBloques
-        .replace(/\{\{ColorPrimario\}\}/g, colorPrimario)
-        .replace(/\{\{ColorSecundario\}\}/g, colorSecundario);
+    (bks: BloqueId[], cp = colorPrimario, cs = colorSecundario) => {
+      return bks
+        .map(id => BLOQUES_DISPONIBLES.find(b => b.id === id)?.html ?? '')
+        .join('\n')
+        .replace(/\{\{ColorPrimario\}\}/g, cp)
+        .replace(/\{\{ColorSecundario\}\}/g, cs);
     },
     [colorPrimario, colorSecundario]
   );
 
-  const validarPlaceholders = (html: string): string[] => {
-    return REQUIRED_PLACEHOLDERS.filter(p => !html.includes(p));
-  };
+  const validarPlaceholders = (html: string): string[] =>
+    REQUIRED_PLACEHOLDERS.filter(p => !html.includes(p));
+
+  // ── Modo Visual ──────────────────────────────────────────────────────────
 
   const handleAgregarBloque = (id: BloqueId) => {
     if (bloques.includes(id)) return;
     const nuevos = [...bloques, id];
     setBloques(nuevos);
-    const html = generarHtmlDesdeBlques(nuevos);
-    setForm(f => ({ ...f, contenidoHTML: html }));
+    setForm(f => ({ ...f, contenidoHTML: generarHtmlDesdeBlques(nuevos) }));
     setValidationErrors([]);
   };
 
   const handleEliminarBloque = (id: BloqueId) => {
     const nuevos = bloques.filter(b => b !== id);
     setBloques(nuevos);
-    const html = generarHtmlDesdeBlques(nuevos);
-    setForm(f => ({ ...f, contenidoHTML: html }));
+    setForm(f => ({ ...f, contenidoHTML: generarHtmlDesdeBlques(nuevos) }));
   };
 
   const handleMoverBloque = (desde: number, hacia: number) => {
@@ -85,22 +92,28 @@ export default function FormatoEditor({
     const [item] = nuevos.splice(desde, 1);
     nuevos.splice(hacia, 0, item);
     setBloques(nuevos);
-    const html = generarHtmlDesdeBlques(nuevos);
-    setForm(f => ({ ...f, contenidoHTML: html }));
+    setForm(f => ({ ...f, contenidoHTML: generarHtmlDesdeBlques(nuevos) }));
   };
 
   const handleColorChange = (tipo: 'primario' | 'secundario', valor: string) => {
-    if (tipo === 'primario') {
-      setColorPrimario(valor);
-    } else {
-      setColorSecundario(valor);
-    }
-    // Regenerar HTML con nuevos colores
-    const html = generarHtmlDesdeBlques(bloques)
-      .replace(/\{\{ColorPrimario\}\}/g, tipo === 'primario' ? valor : colorPrimario)
-      .replace(/\{\{ColorSecundario\}\}/g, tipo === 'secundario' ? valor : colorSecundario);
-    setForm(f => ({ ...f, contenidoHTML: html }));
+    const cp = tipo === 'primario' ? valor : colorPrimario;
+    const cs = tipo === 'secundario' ? valor : colorSecundario;
+    if (tipo === 'primario') setColorPrimario(valor);
+    else setColorSecundario(valor);
+    setForm(f => ({ ...f, contenidoHTML: generarHtmlDesdeBlques(bloques, cp, cs) }));
   };
+
+  // ── Plantilla estándar ────────────────────────────────────────────────────
+
+  const handleCargarPlantilla = () => {
+    const html = STANDARD_TEMPLATES[form.tipo as TipoFormato];
+    setForm(f => ({ ...f, contenidoHTML: html }));
+    setBloques([]);
+    setModo('codigo');
+    setValidationErrors([]);
+  };
+
+  // ── Submit ────────────────────────────────────────────────────────────────
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,11 +126,14 @@ export default function FormatoEditor({
     await onGuardar(form);
   };
 
-  const previewHtml = `${WRAPPER_OPEN}${form.contenidoHTML}${WRAPPER_CLOSE}`;
+  const previewHtml = form.contenidoHTML.startsWith('<!DOCTYPE')
+    ? form.contenidoHTML
+    : `${WRAPPER_OPEN}${form.contenidoHTML}${WRAPPER_CLOSE}`;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl my-6">
+
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-100">
           <h2 className="text-xl font-bold text-slate-800">{titulo}</h2>
@@ -125,20 +141,23 @@ export default function FormatoEditor({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          {/* Errores */}
+
+          {/* Errores de servidor */}
           {error && (
             <div className="bg-red-50 border-l-4 border-red-500 p-3 text-red-700 text-sm rounded">{error}</div>
           )}
+
+          {/* Placeholders faltantes */}
           {validationErrors.length > 0 && (
             <div className="bg-amber-50 border-l-4 border-amber-500 p-3 text-amber-800 text-sm rounded">
               <p className="font-semibold mb-1">Placeholders obligatorios faltantes:</p>
-              <ul className="list-disc list-inside">
-                {validationErrors.map(p => <li key={p}><code>{p}</code></li>)}
+              <ul className="list-disc list-inside space-y-0.5">
+                {validationErrors.map(p => <li key={p}><code className="bg-amber-100 px-1 rounded">{p}</code></li>)}
               </ul>
             </div>
           )}
 
-          {/* Nombre y metadatos */}
+          {/* Nombre, Tipo y flag estándar */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-2">
               <label className="block text-sm font-semibold text-slate-600 mb-1">Nombre del Formato</label>
@@ -177,32 +196,43 @@ export default function FormatoEditor({
             </label>
           </div>
 
-          {/* Tabs de modo */}
-          <div className="flex bg-slate-100 rounded-lg p-1 gap-1 w-fit">
+          {/* Cargar plantilla + Tabs */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex bg-slate-100 rounded-lg p-1 gap-1">
+              <button
+                type="button"
+                onClick={() => setModo('visual')}
+                className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${
+                  modo === 'visual' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Editor Visual
+              </button>
+              <button
+                type="button"
+                onClick={() => setModo('codigo')}
+                className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${
+                  modo === 'codigo' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Modo Código
+              </button>
+            </div>
+
             <button
               type="button"
-              onClick={() => setModo('visual')}
-              className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${
-                modo === 'visual' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-              }`}
+              onClick={handleCargarPlantilla}
+              className="px-4 py-1.5 rounded-lg border border-blue-300 bg-blue-50 text-blue-700 text-sm font-semibold hover:bg-blue-100 transition-all"
+              title={`Carga el HTML estándar ${TIPO_FORMATO_LABELS[form.tipo as TipoFormato]}`}
             >
-              Editor Visual
-            </button>
-            <button
-              type="button"
-              onClick={() => setModo('codigo')}
-              className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${
-                modo === 'codigo' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              Modo Codigo
+              Cargar plantilla {TIPO_FORMATO_LABELS[form.tipo as TipoFormato]}
             </button>
           </div>
 
-          {/* Modo Visual */}
+          {/* ── Modo Visual ── */}
           {modo === 'visual' && (
             <div className="space-y-4">
-              {/* Colores */}
+              {/* Color pickers */}
               <div className="flex flex-wrap gap-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
                 <div className="flex items-center gap-2">
                   <label className="text-sm font-semibold text-slate-600">Color Primario</label>
@@ -250,15 +280,18 @@ export default function FormatoEditor({
                   </div>
                 </div>
 
-                {/* Canvas / bloques activos */}
+                {/* Canvas — orden de bloques */}
                 <div>
                   <p className="text-sm font-semibold text-slate-600 mb-2">
-                    Diseño del formato {bloques.length === 0 && <span className="text-slate-400 font-normal">(arrastra bloques aquí)</span>}
+                    Diseño del formato
+                    {bloques.length === 0 && (
+                      <span className="text-slate-400 font-normal"> (agrega bloques desde la izquierda)</span>
+                    )}
                   </p>
                   <div className="min-h-36 border-2 border-dashed border-slate-300 rounded-xl p-3 space-y-2 bg-slate-50">
                     {bloques.length === 0 && (
                       <p className="text-slate-400 text-sm text-center py-8">
-                        Agrega bloques desde la lista izquierda
+                        O usa "Cargar plantilla" para partir del estándar
                       </p>
                     )}
                     {bloques.map((id, idx) => {
@@ -271,8 +304,7 @@ export default function FormatoEditor({
                           onDragOver={e => { e.preventDefault(); setDragOver(idx); }}
                           onDrop={e => {
                             e.preventDefault();
-                            const desde = Number(e.dataTransfer.getData('text/plain'));
-                            handleMoverBloque(desde, idx);
+                            handleMoverBloque(Number(e.dataTransfer.getData('text/plain')), idx);
                             setDragOver(null);
                           }}
                           onDragLeave={() => setDragOver(null)}
@@ -300,26 +332,61 @@ export default function FormatoEditor({
             </div>
           )}
 
-          {/* Modo Código */}
+          {/* ── Modo Código ── */}
           {modo === 'codigo' && (
-            <div>
-              <label className="block text-sm font-semibold text-slate-600 mb-1">
-                HTML del formato
-                <span className="ml-2 text-xs text-slate-400 font-normal">
-                  Placeholders requeridos: {REQUIRED_PLACEHOLDERS.join(', ')}
-                </span>
-              </label>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-semibold text-slate-600">HTML del formato</label>
+                <button
+                  type="button"
+                  onClick={() => setMostrarPlaceholders(v => !v)}
+                  className="text-xs text-blue-600 hover:underline font-semibold"
+                >
+                  {mostrarPlaceholders ? 'Ocultar placeholders' : 'Ver placeholders disponibles'}
+                </button>
+              </div>
+
+              {/* Referencia de placeholders */}
+              {mostrarPlaceholders && (
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">
+                    Placeholders disponibles
+                    <span className="ml-2 text-amber-600 font-semibold normal-case">
+                      Obligatorios: {REQUIRED_PLACEHOLDERS.join(', ')}
+                    </span>
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {ALL_PLACEHOLDERS.map(p => (
+                      <button
+                        key={p}
+                        type="button"
+                        title="Clic para copiar"
+                        onClick={() => navigator.clipboard.writeText(p)}
+                        className={`px-2 py-0.5 rounded text-xs font-mono transition-all hover:scale-105 ${
+                          REQUIRED_PLACEHOLDERS.includes(p as typeof REQUIRED_PLACEHOLDERS[number])
+                            ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                            : 'bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-2">Clic en cualquier placeholder para copiarlo al portapapeles.</p>
+                </div>
+              )}
+
               <textarea
-                className="w-full h-64 px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-xs font-mono resize-y"
+                className="w-full h-72 px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-xs font-mono resize-y"
                 value={form.contenidoHTML}
                 onChange={e => { setForm(f => ({ ...f, contenidoHTML: e.target.value })); setValidationErrors([]); }}
-                placeholder="Pega tu HTML aquí. Ej: <div>{{Total}}</div>"
+                placeholder={`Pega tu HTML aquí o usa "Cargar plantilla ${TIPO_FORMATO_LABELS[form.tipo as TipoFormato]}" como punto de partida.`}
                 spellCheck={false}
               />
             </div>
           )}
 
-          {/* Previsualización */}
+          {/* Previsualización en tiempo real */}
           {mostrarPreview && form.contenidoHTML && (
             <div className="border border-slate-200 rounded-xl overflow-hidden">
               <div className="flex items-center justify-between px-4 py-2 bg-slate-100 border-b border-slate-200">
@@ -345,7 +412,7 @@ export default function FormatoEditor({
               disabled={!form.contenidoHTML}
               className="px-4 py-2 rounded-lg border border-slate-300 text-slate-600 text-sm font-semibold hover:bg-slate-50 disabled:opacity-40 transition-all"
             >
-              {mostrarPreview ? 'Ocultar Preview' : 'Vista previa'}
+              {mostrarPreview ? 'Ocultar preview' : 'Vista previa'}
             </button>
             <button
               type="submit"

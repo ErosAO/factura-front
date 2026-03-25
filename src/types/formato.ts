@@ -27,14 +27,53 @@ export interface UpdateFormatoForm {
   tipo: TipoFormato;
 }
 
-// Placeholders obligatorios que deben estar en el HTML
+// Placeholders obligatorios presentes en ambos formatos estándar
 export const REQUIRED_PLACEHOLDERS = [
   '{{Total}}',
   '{{Label_TaxID}}',
+  '{{EmisorNombre}}',
+  '{{NumeroFactura}}',
+] as const;
+
+// Todos los placeholders reconocidos (documentación para el usuario)
+export const ALL_PLACEHOLDERS = [
+  // Emisor
+  '{{EmisorNombre}}',
+  '{{EmisorRFC}}',
+  '{{EmisorDireccion}}',
+  // Factura
+  '{{Label_Title}}',
+  '{{NumeroFactura}}',
+  '{{Fecha}}',
+  '{{Label_TaxID}}',
+  // Cliente
+  '{{Label_To}}',
+  '{{ClienteNombre}}',
+  '{{Label_For}}',
+  '{{ProyectoDescripcion}}',
+  // Conceptos (loop)
+  '{{#each Conceptos}}',
+  '{{Descripcion}}',
+  '{{Cantidad}}',
+  '{{PrecioUnitario}}',
+  '{{Importe}}',
+  '{{/each}}',
+  // Totales
+  '{{Subtotal}}',
+  '{{Label_TaxType}}',
+  '{{IvaPorcentaje}}',
+  '{{IVA}}',
+  '{{Label_Currency}}',
+  '{{Total}}',
+  // Banco
+  '{{Label_Bank}}',
+  '{{BancoNombre}}',
+  '{{CLABE}}',
+  '{{SwiftCode}}',
 ] as const;
 
 // Bloques disponibles en el editor visual
-export type BloqueId = 'logo' | 'tabla-conceptos' | 'totales' | 'datos-bancarios';
+export type BloqueId = 'logo' | 'datos-cliente' | 'tabla-conceptos' | 'totales' | 'datos-bancarios';
 
 export interface BloqueTemplate {
   id: BloqueId;
@@ -45,55 +84,88 @@ export interface BloqueTemplate {
 export const BLOQUES_DISPONIBLES: BloqueTemplate[] = [
   {
     id: 'logo',
-    label: 'Logo',
-    html: `<div class="bloque-logo" style="text-align:center;padding:16px;">
-  <img src="{{LogoURL}}" alt="Logo" style="max-height:80px;" />
-  <h2 style="color:{{ColorPrimario}};margin:8px 0;">{{NombreEmisor}}</h2>
-  <p style="color:#666;">RFC: {{Label_TaxID}}</p>
-</div>`,
+    label: 'Logo / Encabezado del Emisor',
+    html: `<div style="background-color:{{ColorPrimario}};height:10px;width:100%;"></div>
+<table style="width:100%;margin-top:10px;">
+  <tr>
+    <td style="width:60%;border:none;">
+      <h1 style="margin:0;color:{{ColorPrimario}};">{{EmisorNombre}}</h1>
+      <p style="font-size:12px;margin:5px 0;">
+        <strong>{{Label_TaxID}}:</strong> {{EmisorRFC}}<br>{{EmisorDireccion}}
+      </p>
+    </td>
+    <td style="width:40%;border:none;">
+      <div style="border:1px solid {{ColorPrimario}};padding:10px;text-align:center;">
+        <span style="font-size:10px;color:#7f8c8d;">{{Label_Title}}</span><br>
+        <span style="font-size:18px;font-weight:bold;">#{{NumeroFactura}}</span><br>
+        <span style="font-size:11px;">Fecha: {{Fecha}}</span>
+      </div>
+    </td>
+  </tr>
+</table>`,
+  },
+  {
+    id: 'datos-cliente',
+    label: 'Datos del Cliente',
+    html: `<table style="width:100%;margin-top:20px;">
+  <tr>
+    <td style="border:none;">
+      <strong style="color:{{ColorPrimario}};">{{Label_To}}</strong><br>
+      {{ClienteNombre}}<br>
+      <strong>{{Label_For}}:</strong> {{ProyectoDescripcion}}
+    </td>
+  </tr>
+</table>`,
   },
   {
     id: 'tabla-conceptos',
     label: 'Tabla de Conceptos',
-    html: `<table class="bloque-conceptos" style="width:100%;border-collapse:collapse;margin:16px 0;">
+    html: `<table style="width:100%;margin-top:20px;border-collapse:collapse;">
   <thead>
-    <tr style="background:{{ColorPrimario}};color:#fff;">
-      <th style="padding:8px;text-align:left;">Descripción</th>
-      <th style="padding:8px;text-align:right;">Cantidad</th>
-      <th style="padding:8px;text-align:right;">Precio Unit.</th>
-      <th style="padding:8px;text-align:right;">Importe</th>
+    <tr>
+      <th style="border-bottom:2px solid {{ColorPrimario}};padding:8px;text-align:left;font-size:12px;">DESCRIPCIÓN</th>
+      <th style="border-bottom:2px solid {{ColorPrimario}};padding:8px;text-align:center;font-size:12px;">CANT.</th>
+      <th style="border-bottom:2px solid {{ColorPrimario}};padding:8px;text-align:right;font-size:12px;">PRECIO U.</th>
+      <th style="border-bottom:2px solid {{ColorPrimario}};padding:8px;text-align:right;font-size:12px;">IMPORTE</th>
     </tr>
   </thead>
   <tbody>
-    {{#Conceptos}}
-    <tr style="border-bottom:1px solid #e2e8f0;">
-      <td style="padding:8px;">{{Descripcion}}</td>
-      <td style="padding:8px;text-align:right;">{{Cantidad}}</td>
-      <td style="padding:8px;text-align:right;">{{PrecioUnitario}}</td>
-      <td style="padding:8px;text-align:right;">{{Importe}}</td>
+    {{#each Conceptos}}
+    <tr>
+      <td style="padding:8px;border-bottom:1px solid #eee;font-size:11px;">{{Descripcion}}</td>
+      <td style="padding:8px;border-bottom:1px solid #eee;font-size:11px;text-align:center;">{{Cantidad}}</td>
+      <td style="padding:8px;border-bottom:1px solid #eee;font-size:11px;text-align:right;">${'$'}{{PrecioUnitario}}</td>
+      <td style="padding:8px;border-bottom:1px solid #eee;font-size:11px;text-align:right;">${'$'}{{Importe}}</td>
     </tr>
-    {{/Conceptos}}
+    {{/each}}
   </tbody>
 </table>`,
   },
   {
     id: 'totales',
     label: 'Totales',
-    html: `<div class="bloque-totales" style="text-align:right;padding:16px;border-top:2px solid {{ColorPrimario}};">
-  <p>Subtotal: <strong>{{Subtotal}}</strong></p>
-  <p>IVA (16%): <strong>{{IVA}}</strong></p>
-  <p style="font-size:1.25em;color:{{ColorPrimario}};">Total: <strong>{{Total}}</strong></p>
-</div>`,
+    html: `<table style="width:35%;float:right;margin-top:15px;border-collapse:collapse;">
+  <tr>
+    <td style="font-size:11px;border:none;">Subtotal:</td>
+    <td style="text-align:right;font-size:11px;border:none;">${'$'}{{Subtotal}}</td>
+  </tr>
+  <tr>
+    <td style="font-size:11px;border:none;">{{Label_TaxType}} ({{IvaPorcentaje}}%):</td>
+    <td style="text-align:right;font-size:11px;border:none;">${'$'}{{IVA}}</td>
+  </tr>
+  <tr>
+    <td style="font-weight:bold;border-top:1px solid {{ColorPrimario}};border-bottom:none;border-left:none;border-right:none;">TOTAL:</td>
+    <td style="text-align:right;font-weight:bold;border-top:1px solid {{ColorPrimario}};border-bottom:none;border-left:none;border-right:none;color:{{ColorSecundario}};">{{Label_Currency}} ${'$'}{{Total}}</td>
+  </tr>
+</table>
+<div style="clear:both;"></div>`,
   },
   {
     id: 'datos-bancarios',
     label: 'Datos Bancarios',
-    html: `<div class="bloque-bancario" style="padding:16px;background:#f8fafc;border-left:4px solid {{ColorSecundario}};margin-top:16px;">
-  <h4 style="color:{{ColorSecundario}};margin:0 0 8px;">Datos Bancarios</h4>
-  <p>Banco: {{BancoNombre}}</p>
-  <p>Cuenta: {{CuentaNumero}}</p>
-  <p>CLABE: {{CLABE}}</p>
-  <p>SWIFT: {{SwiftCode}}</p>
+    html: `<div style="border-top:1px solid #ccc;margin-top:30px;font-size:10px;color:#555;">
+  <strong>{{Label_Bank}}</strong><br>
+  Banco: {{BancoNombre}} | CLABE: {{CLABE}} | SWIFT: {{SwiftCode}}
 </div>`,
   },
 ];
