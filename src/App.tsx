@@ -2,10 +2,11 @@ import { useState } from 'react';
 import type { Factura } from './types/factura';
 import { Formulario } from './components/Formulario';
 import UsuariosPage from './components/usuarios/UsuariosPage';
+import FormatosPage from './components/formatos/FormatosPage';
 import LoginPage from './components/LoginPage';
 import { useAuth } from './context/AuthContext';
 
-type Vista = 'facturas' | 'usuarios';
+type Vista = 'facturas' | 'usuarios' | 'formatos';
 
 const ROL_BADGE: Record<string, string> = {
   Administracion: 'bg-purple-500',
@@ -45,6 +46,9 @@ export default function App() {
           <button className={navItemClass('usuarios')} onClick={() => setVista('usuarios')}>
             Usuarios
           </button>
+          <button className={navItemClass('formatos')} onClick={() => setVista('formatos')}>
+            Formatos
+          </button>
         </div>
 
         {/* Usuario autenticado */}
@@ -68,6 +72,8 @@ export default function App() {
       {/* Contenido */}
       {vista === 'usuarios' ? (
         <UsuariosPage />
+      ) : vista === 'formatos' ? (
+        <FormatosPage />
       ) : (
         <div className="p-6 md:p-12">
           <div className="max-w-4xl mx-auto">
