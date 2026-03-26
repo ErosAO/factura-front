@@ -1,6 +1,6 @@
 import type { AuthUser } from '../context/AuthContext';
 
-const API_BASE = 'https://localhost:7266/auth';
+const API_BASE = `${import.meta.env.VITE_API_URL}/auth`;
 
 interface LoginResponse {
   token: string;

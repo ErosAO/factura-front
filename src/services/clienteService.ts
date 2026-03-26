@@ -1,6 +1,6 @@
 import type { Cliente, CreateClienteForm, UpdateClienteForm } from '../types/cliente';
 
-const API_BASE = 'https://localhost:7266/clientes';
+const API_BASE = `${import.meta.env.VITE_API_URL}/clientes`;
 
 function getToken(): string | null {
   const raw = localStorage.getItem('factura_auth');

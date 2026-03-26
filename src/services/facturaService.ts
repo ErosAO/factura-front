@@ -1,6 +1,6 @@
 import type { FacturaListItem, InsertFacturaDto } from '../types/factura';
 
-const API_BASE = 'https://localhost:7266';
+const API_BASE = import.meta.env.VITE_API_URL;
 
 function getToken(): string {
   try {

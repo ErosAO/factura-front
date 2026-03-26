@@ -1,6 +1,6 @@
 import type { CreateFormatoForm, Formato, UpdateFormatoForm } from '../types/formato';
 
-const API_BASE = 'https://localhost:7266/formatos';
+const API_BASE = `${import.meta.env.VITE_API_URL}/formatos`;
 
 function getToken(): string {
   try {
