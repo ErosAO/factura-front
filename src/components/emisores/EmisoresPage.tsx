@@ -266,7 +266,7 @@ function EmisorForm({ form, onChange, onSubmit, onCancel, error, guardando, subm
         </Field>
 
         <Field label="RFC *">
-          <input required className={inputClass} value={form.rfc} onChange={set('rfc')}
+          <input required className={inputClass} value={form.rfc}
             placeholder="XAXX010101000" maxLength={13} style={{ textTransform: 'uppercase' }}
             onChange={e => onChange({ ...form, rfc: e.target.value.toUpperCase() })} />
         </Field>
