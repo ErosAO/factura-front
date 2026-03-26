@@ -26,7 +26,12 @@ async function handleResponse<T>(res: Response): Promise<T> {
     throw new Error(msg || `Error ${res.status}`);
   }
   const text = await res.text();
-  return text ? JSON.parse(text) : (null as T);
+  if (!text) return null as T;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text as unknown as T;
+  }
 }
 
 export const clienteService = {
