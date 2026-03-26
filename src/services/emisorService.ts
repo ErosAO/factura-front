@@ -3,7 +3,7 @@ import type { Emisor, CreateEmisorForm, UpdateEmisorForm } from '../types/emisor
 const API_BASE = 'https://localhost:7266/emisores';
 
 function getToken(): string | null {
-  const raw = localStorage.getItem('factura_auth_user');
+  const raw = localStorage.getItem('factura_auth');
   if (!raw) return null;
   try {
     return JSON.parse(raw).token ?? null;

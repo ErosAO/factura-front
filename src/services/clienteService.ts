@@ -3,7 +3,7 @@ import type { Cliente, CreateClienteForm, UpdateClienteForm } from '../types/cli
 const API_BASE = 'https://localhost:7266/clientes';
 
 function getToken(): string | null {
-  const raw = localStorage.getItem('factura_auth_user');
+  const raw = localStorage.getItem('factura_auth');
   if (!raw) return null;
   try {
     return JSON.parse(raw).token ?? null;
