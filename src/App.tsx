@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import UsuariosPage from './components/usuarios/UsuariosPage';
 import FormatosPage from './components/formatos/FormatosPage';
+import EmisoresPage from './components/emisores/EmisoresPage';
+import ClientesPage from './components/clientes/ClientesPage';
 import LoginPage from './components/LoginPage';
 import CrearFactura from './components/facturas/CrearFactura';
 import ListadoFacturas from './components/facturas/ListadoFacturas';
 import { useAuth } from './context/AuthContext';
 
-type Vista = 'facturas' | 'usuarios' | 'formatos';
+type Vista = 'facturas' | 'usuarios' | 'formatos' | 'emisores' | 'clientes';
 
 const ROL_BADGE: Record<string, string> = {
   Administracion: 'bg-purple-500',
@@ -36,11 +38,17 @@ export default function App() {
           <button className={navItemClass('facturas')} onClick={() => setVista('facturas')}>
             Facturas
           </button>
-          <button className={navItemClass('usuarios')} onClick={() => setVista('usuarios')}>
-            Usuarios
+          <button className={navItemClass('emisores')} onClick={() => setVista('emisores')}>
+            Emisores
+          </button>
+          <button className={navItemClass('clientes')} onClick={() => setVista('clientes')}>
+            Clientes
           </button>
           <button className={navItemClass('formatos')} onClick={() => setVista('formatos')}>
             Formatos
+          </button>
+          <button className={navItemClass('usuarios')} onClick={() => setVista('usuarios')}>
+            Usuarios
           </button>
         </div>
 
@@ -66,6 +74,10 @@ export default function App() {
         <UsuariosPage />
       ) : vista === 'formatos' ? (
         <FormatosPage />
+      ) : vista === 'emisores' ? (
+        <EmisoresPage />
+      ) : vista === 'clientes' ? (
+        <ClientesPage />
       ) : (
         <div className="p-6 md:p-10">
           <div className="max-w-5xl mx-auto space-y-8">
