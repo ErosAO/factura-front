@@ -1,6 +1,6 @@
 import type { Cliente, CreateClienteForm, UpdateClienteForm } from '../types/cliente';
 
-const API_BASE = 'http://localhost:5030/clientes';
+const API_BASE = 'https://localhost:7266/clientes';
 
 function getToken(): string | null {
   const raw = localStorage.getItem('factura_auth');

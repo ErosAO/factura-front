@@ -1,6 +1,6 @@
 import type { Emisor, CreateEmisorForm, UpdateEmisorForm } from '../types/emisor';
 
-const API_BASE = 'http://localhost:5030/emisores';
+const API_BASE = 'https://localhost:7266/emisores';
 
 function getToken(): string | null {
   const raw = localStorage.getItem('factura_auth');

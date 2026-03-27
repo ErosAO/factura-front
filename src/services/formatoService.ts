@@ -1,6 +1,6 @@
 import type { CreateFormatoForm, Formato, UpdateFormatoForm } from '../types/formato';
 
-const API_BASE = 'http://localhost:5030/formatos';
+const API_BASE = 'https://localhost:7266/formatos';
 
 function getToken(): string {
   try {

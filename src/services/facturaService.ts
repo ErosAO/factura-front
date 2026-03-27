@@ -1,6 +1,6 @@
 import type { FacturaListItem, InsertFacturaDto } from '../types/factura';
 
-const API_BASE = 'http://localhost:5030';
+const API_BASE = 'https://localhost:7266';
 
 function getToken(): string {
   try {
