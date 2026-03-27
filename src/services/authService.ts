@@ -1,6 +1,6 @@
 import type { AuthUser } from '../context/AuthContext';
 
-const API_BASE = 'https://localhost:7266/auth';
+const API_BASE = 'http://localhost:5030/auth';
 
 interface LoginResponse {
   token: string;
