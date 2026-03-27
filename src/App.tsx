@@ -16,12 +16,22 @@ const ROL_BADGE: Record<string, string> = {
   Usuario: 'bg-green-500',
 };
 
+const MODULOS_ADMIN: Vista[] = ['usuarios'];
+
 export default function App() {
   const { user, logout, isAuthenticated } = useAuth();
   const [vista, setVista] = useState<Vista>('facturas');
   const [refreshKey, setRefreshKey] = useState(0);
 
   if (!isAuthenticated) return <LoginPage />;
+
+  const esAdmin = user!.rol === 'Administracion';
+
+  // Si el usuario no tiene acceso al módulo actual, redirigir a facturas
+  if (MODULOS_ADMIN.includes(vista) && !esAdmin) {
+    setVista('facturas');
+    return null;
+  }
 
   const navItemClass = (v: Vista) =>
     `px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
@@ -47,9 +57,11 @@ export default function App() {
           <button className={navItemClass('formatos')} onClick={() => setVista('formatos')}>
             Formatos
           </button>
-          <button className={navItemClass('usuarios')} onClick={() => setVista('usuarios')}>
-            Usuarios
-          </button>
+          {esAdmin && (
+            <button className={navItemClass('usuarios')} onClick={() => setVista('usuarios')}>
+              Usuarios
+            </button>
+          )}
         </div>
 
         <div className="ml-auto flex items-center gap-3">
