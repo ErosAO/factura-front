@@ -41,7 +41,7 @@ describe('LoginPage', () => {
 
   it('muestra el título de la aplicación', () => {
     render(<LoginPage />);
-    expect(screen.getByText('FacturaSys')).toBeInTheDocument();
+    expect(screen.getByText('Omnifactura')).toBeInTheDocument();
   });
 
   // ── Envío del formulario ──────────────────────────────────────────────────

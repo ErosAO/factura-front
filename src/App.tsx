@@ -42,7 +42,7 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 font-sans">
       {/* Barra de navegación */}
       <nav className="bg-slate-900 px-6 md:px-10 py-3 flex items-center gap-3">
-        <span className="text-white font-extrabold text-lg mr-4 tracking-tight">FacturaSys</span>
+        <span className="text-white font-extrabold text-lg mr-4 tracking-tight">Omnifactura</span>
 
         <div className="flex bg-slate-800 rounded-lg p-1 gap-1">
           <button className={navItemClass('facturas')} onClick={() => setVista('facturas')}>
